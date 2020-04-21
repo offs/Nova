@@ -185,7 +185,7 @@ function file.Open( fn, fm, path)
 			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
 			return false
 		else
-			nova.consoleWarn("Allowed attemped file stealing. File: "..fn.." Path: "..path)
+			nova.consoleWarn("Allowed attemped file.Open function. File: "..fn.." Path: "..path)
 			return nova.fOpen( fn, fm, path)
 		end
 	else
@@ -198,7 +198,7 @@ function file.Read( fn, path )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
+			nova.consoleWarn("Blocked attemped file.Read function. File: "..fn.." Path: "..path)
 			return false
 		else
 			return nova.fRead( fn, path )
@@ -212,7 +212,7 @@ function file.Write( fn, data )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
+			nova.consoleWarn("Blocked attemped file.Write function. File: "..fn)
 			return false
 		else
 			return nova.fWrite( fn, data )
@@ -226,7 +226,7 @@ function file.Append( fn, data )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
+			nova.consoleWarn("Blocked attemped file.Append function. File: "..fn)
 			return false
 		else
 			return nova.fAppend( fn, data )
@@ -240,7 +240,7 @@ function file.Size( fn, path )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
+			nova.consoleWarn("Blocked attemped file.Size function. File: "..fn.." Path: "..path)
 			return false
 		else
 			return nova.fSize( fn, path )
@@ -254,7 +254,7 @@ function file.Open( fn, mode, data )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
+			nova.consoleWarn("Blocked attemped file.Open function. File: "..fn.." Path: "..path)
 			return false
 		else
 			return nova.fOpen( fn, mode, data )
@@ -268,7 +268,7 @@ function file.IsDir(dir, path)
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",dir)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(nova.newfn[1], "scripthook/") || !table.HasValue(nova.allowedfiles, nova.newfn[1]) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..dir.." Path: "..path)
+			nova.consoleWarn("Blocked attemped file.IsDir function. File: "..dir.." Path: "..path)
 			return false
 		else
 			return nova.IsDir(dir, path)
@@ -282,7 +282,7 @@ function file.Exists(fn, path)
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
+			nova.consoleWarn("Blocked attemped file.Exists function. File: "..fn.." Path: "..path)
 			return false
 		else
 			return nova.Exists(fn, path)
