@@ -14,20 +14,11 @@ including; Reading your files, Crashing your game, and sending unwanted commands
 to your client.
 
 
-°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸
-
-
-Last Update (21st April 2020)
-~ Rewrite of all code
-~ new GUI
-~ better methods
- >> WIP <<
-
-
 If you dont know what you're doing please dont edit below this line.
 
+°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸
+
 ]]--
--- °º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸°º¤ø,¸¸,ø¤º°`°º¤ø,¸,ø¤°º¤ø,¸¸,ø¤º°`°º¤ø,¸--
 
 if (SERVER) then return end
 
@@ -38,13 +29,14 @@ nova.logs = {}
 nova.commands = {
 	["nova_menu"] = function() if (!nova.madeGUI) then nova.makeGUI() else nova.popGUI() nova.loadPanel(1) end end,
 	["nova_check"] = function() nova.scanACs() end,
-	["nova_unload"] = function() nova.unLoad() end,
+	["nova_unload"] = function() nova.unLoad()  end
 }
 nova.vars = {
 	["nova_detourscreen"] = {[1] = "Block render.Capture, render.RenderView, render.Clear", [2] = 1},
 	["nova_detourfile"] = {[1] = "Block servers from viewing and editing your files", [2] = 1},
+	["nova_detournet"] = {[1] = "Block servers from viewing and editing your files", [2] = 0},
 	["nova_detourcmd"] = {[1] = "Block servers from sending you unwanted commands", [2] = 1},
-	["nova_detourlua"] = {[1] = "Block servers from sending you lua", [2] = 0},
+	["nova_detourlua"] = {[1] = "Block servers from sending you lua", [2] = 1},
 	["nova_detourcrash"] = {[1] = "Block servers from crashing your client", [2] = 1},
 	["nova_detourip"] = {[1] = "Block servers from getting your IP Address", [2] = 1},
 	["nova_detourhttp"] = {[1] = "Block servers from calling all http related functions", [2] = 1},
@@ -97,14 +89,14 @@ nova.scanDirs = {
 	["SAC"] = "autorun/client/swiftac.lua"
 }
 
-local Meta_PLY = FindMetaTable("Player")
+nova.Meta_PLY = FindMetaTable("Player")
 nova.runCC = RunConsoleCommand
 nova.runSTR = RunString
 nova.runSTREX = RunStringEx
 nova.compSTR = CompileString
 nova.rCap = render.Capture
 nova.rCapPixels = render.CapturePixels
-nova.sndLUA = Meta_PLY.SendLUA
+nova.sndLUA = nova.Meta_PLY.SendLUA
 nova.fOpen = file.Open
 nova.fWrite = file.Write
 nova.fAppend = file.Append
@@ -116,22 +108,16 @@ nova.fTime = file.Time
 nova.hFetch = http.Fetch
 nova.hPost = http.Fetch
 nova.gConvar = GetConVar
+nova.nReceive = net.Receive
+nova.nStart = net.Start
+nova.nSTS = net.SendToServer
 
-
-function nova.addLog(message, type)
+function nova.addLog(message)
+	if (nova.lastmsg == message) then return end
+	nova.lastmsg = message
 	table.insert(nova.logs, os.date("%I:%M:%S %p").." | "..message)
-end
-
-function nova.consoleWarn(message, type)
-	if (nova.get("nova_logconsole") == 1) then 
-		if (type == "warn") then
-			MsgC(Color(255,0,0), "WARN! ", Color(255,255,0),"Nova > ", Color(255,255,255), message.."\n")
-			surface.PlaySound("HL1/fvox/warning.wav")
-			nova.addLog(message)
-		else
-			MsgC(Color(255,255,0),"Nova > ", Color(255,255,255), message.."\n")
-			nova.addLog(message)
-		end
+	if (nova.get("nova_logconsole") == 1) then
+		MsgC(Color(255,255,0),"Nova > ", Color(255,255,255), message.."\n")
 	end
 end
 
@@ -139,26 +125,30 @@ function nova.popupWarn(message, type)
 
 end
 
+function nova.saveCFG()
+
+end
+
 function nova.detourFunction(original, new)
     detouredfuncs[new] = original
-    consoleWarn("Detoured function: ".. original, "notif")
+    nova.addLog("Detoured function: ".. original)
     return new
 end
 
 function nova.addCommand( name, func, completefunc, help, flags )
 	concommand.Add(name, func, completefunc, help, flags)
-	nova.consoleWarn("Added command: "..name)
+	nova.addLog("Added command: "..name)
 end
 
 function nova.removeCommand(name)
 	concommand.Remove(name)
-	nova.consoleWarn("Removed command: "..name)
+	nova.addLog("Removed command: "..name)
 end
 
 
 function nova.scanACs()
 	for k,v in pairs(nova.scanDirs) do
-		if (nova.fExists(v, "LUA")) then return nova.consoleWarn("Found Anti-Cheat: "..k) end
+		if (nova.fExists(v, "LUA")) then return nova.addLog("Found Anti-Cheat: "..k) end
 	end
 end
 
@@ -175,10 +165,10 @@ function file.Open( fn, fm, path)
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Path: "..path)
+			nova.addLog("Blocked attemped file stealing. File: "..fn)
 			return false
 		else
-			nova.consoleWarn("Allowed attemped file.Open function. File: "..fn.." Path: "..path)
+			nova.addLog("Allowed attemped file.Open function. File: "..fn)
 			return nova.fOpen( fn, fm, path)
 		end
 	else
@@ -191,7 +181,7 @@ function file.Read( fn, path )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file.Read function. File: "..fn.." Path: "..path)
+			nova.addLog("Blocked attemped file.Read function. File: "..fn)
 			return false
 		else
 			return nova.fRead( fn, path )
@@ -205,7 +195,7 @@ function file.Write( fn, data )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file.Write function. File: "..fn)
+			nova.addLog("Blocked attemped file.Write function. File: "..fn)
 			return false
 		else
 			return nova.fWrite( fn, data )
@@ -219,7 +209,7 @@ function file.Append( fn, data )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file.Append function. File: "..fn)
+			nova.addLog("Blocked attemped file.Append function. File: "..fn)
 			return false
 		else
 			return nova.fAppend( fn, data )
@@ -233,7 +223,7 @@ function file.Size( fn, path )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file.Size function. File: "..fn.." Path: "..path)
+			nova.addLog("Blocked attemped file.Size function. File: "..fn.." Path: "..path)
 			return false
 		else
 			return nova.fSize( fn, path )
@@ -247,7 +237,7 @@ function file.Open( fn, mode, data )
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file.Open function. File: "..fn.." Path: "..path)
+			nova.addLog("Blocked attemped file.Open function. File: "..fn.." Path: "..path)
 			return false
 		else
 			return nova.fOpen( fn, mode, data )
@@ -261,7 +251,7 @@ function file.IsDir(dir, path)
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",dir)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(nova.newfn[1], "scripthook/") || !table.HasValue(nova.allowedfiles, nova.newfn[1]) then
-			nova.consoleWarn("Blocked attemped file.IsDir function. File: "..dir.." Path: "..path)
+			nova.addLog("Blocked attemped file.IsDir function. File: "..dir)
 			return false
 		else
 			return nova.IsDir(dir, path)
@@ -275,7 +265,7 @@ function file.Exists(fn, path)
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if (nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook") || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) || !table.HasValue(nova.scanDirs,fn)) then
-			nova.consoleWarn("Blocked attemped file.Exists function. File: "..fn)
+			nova.addLog("Blocked attemped file.Exists function. File: "..fn)
 			return false
 		else
 			return nova.fExists(fn, path)
@@ -290,7 +280,7 @@ function file.Time(fn, data)
 		nova.newfn = nil
 		nova.newfn = string.Explode("/",fn)
 		if ( nova.newfn[2] && (nova.newfn[#nova.newfn-1] == "lua" && (string.find(nova.newfn[#nova.newfn], ".lua") || string.find(nova.newfn[#nova.newfn], ".txt")) || nova.newfn[#nova.newfn-1] == "scripthook")) || nova.newfn[1] && (string.find(nova.newfn[1], ".lua") || string.find(nova.newfn[1], ".txt")) && path == "LUA" || string.find(fn, "scripthook/") || !table.HasValue(nova.allowedfiles, fn) then
-			nova.consoleWarn("Blocked attemped file stealing. File: "..fn.." Data: "..data)
+			nova.addLog("Blocked attemped file stealing. File: "..fn.." Data: "..data)
 			return false
 		else
 			return nova.fTime(fn, path)
@@ -306,47 +296,47 @@ function file.Delete(fn)
 end
 
 
-function Meta_PLY.SendLua(ply,cmd)
+function nova.Meta_PLY.SendLua(ply,cmd)
 	if (nova.get("nova_detourlua") == 1) then
 		if (!table.HasValue(nova.allowedfiles, cmd)) then
-		nova.consoleWarn("Blocked SendLUA, Command: "..cmd)
+		nova.addLog("Blocked SendLUA, Command: "..cmd)
 		return false
 	else
-		nova.consoleWarn("Allowed SendLUA, Command: "..cmd)
+		nova.addLog("Allowed SendLUA, Command: "..cmd)
 	end
 	else
 	return nova.sndLUA(ply,cmd)
 end
 end
 
-function Meta_PLY.IPAddress()
+function nova.Meta_PLY.IPAddress()
 	if (nova.get("nova_detourip") == 1) then
-		nova.consoleWarn("Blocked attempted IP grab")
+		nova.addLog("Blocked attempted IP grab")
 		return "0.0.0.0"
 	end
 end
 
 function http.Fetch(url, onSuc, onFail)
 	if (nova.get("nova_detourhttp") == 1) then
-			nova.consoleWarn("Blocked attempted http.Fetch function, URL: "..url.." On Success: "..onSuc)
+			nova.addLog("Blocked attempted http.Fetch function, URL: "..url)
 			return false
 	end
-	return nova.hFetch(url,onSuc,onFail)
+	return nova.hFetch(url)
 end
 
-function http.Post(url, onSuc, onFail)
+function http.Post(url)
 	if (nova.get("nova_detourhttp") == 1) then
-			nova.consoleWarn("Blocked attempted http.Post function, URL: "..url.." On Success: "..onSuc)
+			nova.addLog("Blocked attempted http.Post function, URL: "..url)
 			return false
 	end
-	return nova.hPost(url,onSuc,onFail)
+	return nova.hPost(url)
 end
 
 
 function RunConsoleCommand(cmd, val)
 	if (nova.get("nova_detourcmd") == 1) then
 		if (table.HasValue(nova.defaultbadcommands, cmd)) then
-			nova.consoleWarn("Blocked attempted RunConsoleCommand execution, Command: "..cmd.." Value: "..val)
+			nova.addLog("Blocked attempted RunConsoleCommand execution, Command: "..cmd.." Value: "..val)
 			return false
 		else
 			return nova.runCC(cmd,val)
@@ -358,7 +348,7 @@ end
 function RunString(str)
 	if (nova.get("nova_detourcmd") == 1) then
 		if (!table.HasValue(nova.allowedfiles, str)) then
-			nova.consoleWarn("Blocked attempted RunString execution, String: "..str)
+			nova.addLog("Blocked attempted RunString execution, String: "..str)
 			return false
 		else
 			return nova.runSTR(str)
@@ -370,7 +360,7 @@ end
 function RunStringEx(str)
 	if (nova.get("nova_detourcmd") == 1) then
 		if (!table.HasValue(nova.allowedfiles, str)) then
-			nova.consoleWarn("Blocked attempted RunStringEX execution, String: "..str)
+			nova.addLog("Blocked attempted RunStringEX execution, String: "..str)
 			return false
 		else
 			return nova.runSTREX(str)
@@ -382,7 +372,7 @@ end
 function CompileString(str)
 	if (nova.get("nova_detourcmd") == 1) then
 		if (!table.HasValue(nova.allowedfiles, str)) then
-			nova.consoleWarn("Blocked attempted CompileString execution, String: "..str)
+			nova.addLog("Blocked attempted CompileString execution, String: "..str)
 			return false
 		else
 			return nova.compSTR(str)
@@ -394,7 +384,7 @@ end
 
 function render.Capture(data)
 	if (nova.get("nova_detourscreen") == 1) then
-		nova.consoleWarn("Blocked attempted render.Capture")
+		nova.addLog("Blocked attempted render.Capture function")
 		return false
 	else
 	return nova.rCap(data) end
@@ -402,10 +392,28 @@ end
 
 function render.CapturePixels(data)
 	if (nova.get("nova_detourscreen") == 1) then
-		nova.consoleWarn("Blocked attempted render.CapturePixels")
+		nova.addLog("Blocked attempted render.CapturePixels function.")
 		return false
 	else
 	return nova.rCapPixels(data) end
+end
+
+function net.Receive(netname)
+	if (nova.get("nova_detournet") == 1) then
+		nova.addLog("Blocked attempted net.Receive function, Name: "..netname)
+		return false
+	else
+		nova.addLog("Allowed attempted net.Receive function, Name: "..netname)
+	return nova.nReceive(netname) end
+end
+
+function net.Start(netname)
+	if (nova.get("nova_detournet") == 1) then
+		nova.addLog("Blocked attempted net.Start function, Name: "..netname)
+		return false
+	else
+		nova.addLog("Allowed attempted net.Start function, Name: "..netname)
+	return nova.nStart(netname) end
 end
 
 
@@ -450,6 +458,7 @@ function nova.loadPanel(panelnum)
 		nova.addCheck("Attemped Crashes","nova_detourcrash",10,75)
 		nova.addCheck("IP Address","nova_detourip",10,90)
 		nova.addCheck("Http Requests","nova_detourhttp",10,105)
+		nova.addCheck("Net Lib *","nova_detournet",10,120)
 
 		nova.addLabel("Logging", 100, 0)
 		nova.addCheck("Log to Console","nova_logconsole",100,15)
@@ -463,14 +472,22 @@ function nova.loadPanel(panelnum)
 
 
 
-		nova.addLabel("Scroll over a feature to know more", 210, 145)
+		--nova.addLabel("Scroll over a feature to know more", 210, 145)
 	elseif (panelnum == 2) then
 		nova.logpanel = vgui.Create("RichText", nova.panel)
 		nova.logpanel:Dock(FILL)
 		nova.logpanel:InsertColorChange(255, 255, 255, 255)
+		nova.logpanel:DockMargin(0, 0, 0, 30)
 		for k,v in ipairs(nova.logs) do
 			nova.logpanel:AppendText(v.."\n")
 		end
+
+		nova.clearlogs = vgui.Create("DButton", nova.panel)
+		nova.clearlogs:SetSize(100,20)
+		nova.clearlogs:SetPos(10,290)
+		nova.clearlogs:SetText("Clear Logs")
+		nova.clearlogs.Paint = function(self,w,h) draw.RoundedBoxEx(0, 0, 0, w, h, Color(25,25,25)) end
+		nova.clearlogs.DoClick = function() nova.logs = {} nova.logpanel:SetText("") end
 	else
 		nova.addLabel("Coming soon", 130, 50)
 	end
@@ -551,7 +568,7 @@ function nova.Load()
 	surface.PlaySound("garrysmod/content_downloaded.wav")
 	nova.makeGUI()
 	if (nova.get("nova_scanload")) then
-		nova.scanACs()
+		--nova.scanACs()
 	end
 end
 
