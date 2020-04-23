@@ -14,4 +14,4 @@ _Nova is still very much in-development and still being worked on, you _will_ ex
 ## Previews
 ![Preview 1](https://i.imgur.com/aj4iDxe.png)
 
-![Preview 2](https://i.imgur.com/pj48uQ9.png)
+![Preview 2](https://i.imgur.com/VGD0aDQ.png)
