@@ -9,7 +9,8 @@ This script protects your client from all areas of attacks from servers includin
 * Unwanted LUA execution
 * Crashing your game
 
-_Nova is still very much in-development and still being worked on, you _will_ experience bugs while using this at this time_
+~~Nova is still very much in-development and still being worked on, you _will_ experience bugs while using this at this time~~
+working on something new
 
 ## Previews
 ![Preview 1](https://i.imgur.com/aj4iDxe.png)
